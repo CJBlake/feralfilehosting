@@ -59,6 +59,7 @@ login="username"
 pass="password"
 host="server.feralhosting.com"
 remote_dir='~/folder/you/want/to/copy'
+temp_dir='~/temp'
 local_dir="/folder/you/mounted/to/jail"
 
 base_name="$(basename "$0")"
@@ -72,12 +73,13 @@ else
     touch "$lock_file"
     lftp -p 22 -u "$login","$pass" sftp://"$host" << EOF
     set sftp:auto-confirm yes
-    set mirror:use-pget-n 5
-    mirror -c -P5 "$remote_dir" "$local_dir"
+    set mirror:use-pget-n 10
+    mirror -c -P5 "$remote_dir" "$temp_dir"
     quit
 EOF
     rm -f "$lock_file"
     trap - SIGINT SIGTERM
+    mv  -v ~/temp/* "$local_dir"
     exit
 fi
 ~~~
@@ -87,6 +89,7 @@ Run this to download the script in your jail and confiure it
 ~~~
 su (username) 
 mkdir ~/scripts
+mkdir ~/temp
 cd ~/scripts
 wget -q https://raw.githubusercontent.com/CJBlake/feralhosting-freenas_lftp/master/syncdownloads.sh
 nano syncdownloads.sh
